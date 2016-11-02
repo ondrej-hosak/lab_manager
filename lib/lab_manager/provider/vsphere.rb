@@ -99,6 +99,14 @@ module Provider
         VSphereConfig.create_vm_defaults.symbolize_keys || {}
       )
 
+      #puts 'HERE'
+      #Sidekiq.logger.debug 'sq d HERE'
+      #Sidekiq.logger.info 'sq i HERE'
+      #LabManager.logger.debug 'lm d HERE'
+      #LabManager.logger.info 'lm i HERE'
+
+
+
       opts[:template_path] = compute.image if compute.image
 
       VSphere.with_connection do |vs|
@@ -118,6 +126,7 @@ module Provider
           exception_cb: exception_cb,
           sleep: ->(n) { Random.rand(n*3..n*3+10.0) }
         ) do
+          #puts "creating machine with name: #{vm_name} options: #{opts.inspect}"
           LabManager.logger.info "creating machine with name: #{vm_name} options: #{opts.inspect}"
           machine = vs.vm_clone(
             'datacenter'    => opts[:datacenter],
@@ -128,6 +137,8 @@ module Provider
             'linked_clone'  => opts[:linked_clone],
             'dest_folder'   => dest_folder,
             'power_on'      => opts[:power_on],
+            #'storage_pod'   => 'loc:alvin-01_01',
+            #'storage_pod'   => 'san:ssd_02e4',
             'wait'          => true
           )
 

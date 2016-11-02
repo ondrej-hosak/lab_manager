@@ -1,7 +1,7 @@
 # A sample Gemfile
 source 'https://rubygems.org'
 
-ruby '2.2.2'
+ruby '2.3.0'
 
 gem 'activesupport',    '4.2.3'
 gem 'activerecord',     '4.2.3'
@@ -15,8 +15,9 @@ gem 'metriks',          '~> 0.9.9'
 gem 'connection_pool',  '~> 2.2.0'
 
 gem 'rbvmomi',          '~> 1.8.2'
-gem 'fog',              '~> 1.36.0'
-# gem 'fog-vsphere',      ''
+gem 'fog',              '~> 1.38.0'
+gem 'redis',            '~> 3.3.1'
+gem 'redis-namespace',  '~> 1.5.2'
 
 gem 'pg'
 gem 'aasm', '~> 4.2.0'
