@@ -320,16 +320,18 @@ module Provider
         end
       end
       return nil unless result_snapshot
-      result_snapshot.slice(
-        :name,
-        :quiesced,
-        :description,
-        :create_time,
-        :power_state,
-        :ref,
-        :snapshot_name_chain,
-        :ref_chain
-      )
+
+      {
+        name: result_snapshot.name,
+        ref: result_snapshot.ref,
+        quiesced: result_snapshot.quiescedi,
+        description: result_snapshot.description,
+        create_time: result_snapshot.create_time,
+        power_state: result_snapshot.power_state,
+        ref: result_snapshot.ref,
+        snapshot_name_chain: result_snapshot.snapshot_name_chain,
+        ref_chain: result_snapshot.ref_chain
+      }
     end
 
     def revert_snapshot_vm(opts)

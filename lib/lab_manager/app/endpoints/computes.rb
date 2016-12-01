@@ -139,14 +139,9 @@ module LabManager
             message: 'only name is allowed param'
           }.to_json unless (params.keys - %w(name id splat captures)).empty?
 
-          snapshot = compute.snapshots.create!(
-            name: params[:name]
-          )
-
           action = compute.actions.create!(
             command: 'take_snapshot_vm',
             payload: {
-              snapshot_id: snapshot.id,
               name: params['name']
             }
           )
