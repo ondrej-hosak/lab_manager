@@ -287,12 +287,12 @@ describe 'Computes' do
         expect(response['message']).to match(/only.*is allowed/)
       end
 
-      it 'creates snapshot model and returns it' do
+      it 'creates snapshot and returns action' do
         post "/computes/#{compute.id}/snapshots", 'name' => 'correct'
         expect(last_response.status).to eq 200
         response = MultiJson.load(last_response.body)
-        snapshot = compute.snapshots.first
-        expect(response).to eq MultiJson.load(snapshot.to_json)
+        action = compute.actions.first
+        expect(response).to eq MultiJson.load(action.to_json)
       end
 
       it 'assign name to snapshot model' do

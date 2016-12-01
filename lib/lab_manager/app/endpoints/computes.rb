@@ -142,14 +142,16 @@ module LabManager
           snapshot = compute.snapshots.create!(
             name: params[:name]
           )
-          compute.actions.create!(
+
+          action = compute.actions.create!(
             command: 'take_snapshot_vm',
             payload: {
               snapshot_id: snapshot.id,
               name: params['name']
             }
           )
-          snapshot.to_json
+
+          action.to_json
         end
 
         get '/:id/snapshots/:snapshot_id' do
