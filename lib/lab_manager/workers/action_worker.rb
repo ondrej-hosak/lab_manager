@@ -175,16 +175,21 @@ module LabManager
 
     def take_snapshot_vm
       fail 'Wrong action payload' unless action.payload
-      fail 'Wrong action payload, no snapshot_id given' unless action.payload.key?(:snapshot_id)
-      snapshot = compute.snapshots.find(action.payload[:snapshot_id])
-      fail 'Snapshot already created' if snapshot.provider_ref
+      fail 'Take snapshot action requires a name' unless action.payload[:name]
+
+      snapshot = compute.snapshots.create!(name: action.payload[:name])
+      #fail 'Snapshot already created' if snapshot.provider_ref
       # lock snapshot is not needed, because action is already locked
       # (snapshot.with_lock('FOR UPDATE'))
-      snapshot.provider_data = compute.take_snapshot_vm(action.payload)
-      snapshot.provider_ref = snapshot.provider_data['ref']
+      data = compute.take_snapshot_vm(action.payload)
+
+      snapshot.provider_data = data
+      snapshot.provider_ref = data[:ref]
       snapshot.save!
       action.succeeded!
     rescue => e
+      snapshot.delete if snapshot
+
       action.failed
       action.reason = e.to_s
       action.save!

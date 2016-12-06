@@ -295,19 +295,12 @@ describe 'Computes' do
         expect(response).to eq MultiJson.load(action.to_json)
       end
 
-      it 'assign name to snapshot model' do
-        post "/computes/#{compute.id}/snapshots", 'name' => 'correct'
-        snapshot = compute.snapshots.first
-        expect(snapshot.name).to eq 'correct'
-      end
-
       it 'creates action for take_snapshot_vm' do
         post "/computes/#{compute.id}/snapshots", 'name' => 'correct'
         expect(last_response.status).to eq 200
         response = MultiJson.load(last_response.body)
         action = compute.actions.last
         expect(action.command).to eq 'take_snapshot_vm'
-        expect(action.payload[:snapshot_id]).to eq response['id']
         expect(action.payload[:name]).to eq 'correct'
       end
 
@@ -340,7 +333,7 @@ describe 'Computes' do
 
         it 'creates the action' do
           expect_any_instance_of(::Compute).to receive(:actions) do
-            double('fake acction', create!: { id: 899_999 })
+            double('fake action', create!: { id: 899_999 })
           end
 
           post "/computes/#{compute.id}/snapshots/#{snapshot.id}/revert"
@@ -348,7 +341,7 @@ describe 'Computes' do
 
         it 'returns the created action' do
           allow_any_instance_of(::Compute).to receive(:actions) do
-            double('fake acction', create!: { id: 899_999 })
+            double('fake action', create!: { id: 899_999 })
           end
 
           post "/computes/#{compute.id}/snapshots/#{snapshot.id}/revert"

@@ -93,10 +93,12 @@ describe LabManager::ActionWorker do
   end
 
   context 'when take_snapshot action is requested' do
-    let(:snapshot) { compute.snapshots.create!(name: 'foo') }
     let(:sample_provider_data) { { a: 'b', c: 'd', e: 'f', ref: '123' } }
     let(:action) do
-      compute.actions.create!(command: :take_snapshot_vm, payload: { snapshot_id: snapshot.id })
+      compute.actions.create!(command: :take_snapshot_vm, payload: {})
+    end
+    let(:action_with_snapshot_name) do
+      compute.actions.create!(command: :take_snapshot_vm, payload: { name: 'my_snapshot' })
     end
 
     it 'fails when action payload is unset' do
@@ -107,45 +109,60 @@ describe LabManager::ActionWorker do
       expect(action.reason).to eq 'Wrong action payload'
     end
 
-    it 'fails when action payload doesn\'t have :snapshot_id' do
+    it 'fails when action payload doesn\'t have :name' do
       compute.enqueue!
       action = compute.actions.create!(command: :take_snapshot_vm, payload: {})
       action_worker.perform(action.id)
       expect(action.reload.state).to eq 'failed'
-      expect(action.reason).to eq 'Wrong action payload, no snapshot_id given'
+      expect(action.reason).to eq 'Take snapshot action requires a name'
     end
 
-    it 'fails when shapshot#provider_ref is already filled' do
-      snapshot.provider_ref = '1225455'
-      snapshot.save!
+    it 'fails when shapshot is already created' do
+      compute.snapshots.create!(name: 'my_snapshot')
       compute.enqueue!
-      action_worker.perform(action.id)
-      expect(action.reload.state).to eq 'failed'
-      expect(action.reason).to eq 'Snapshot already created'
+      action_worker.perform(action_with_snapshot_name.id)
+
+      action_with_snapshot_name.reload
+
+      expect(action_with_snapshot_name.state).to eq 'failed'
+      expect(action_with_snapshot_name.reason).to eq 'Validation failed: Name has already been taken'
     end
+
+    it 'deletes snapshot when action fails' do
+      expect_any_instance_of(::Compute).to receive(:take_snapshot_vm) { fail 'some reason' }
+      compute.enqueue!
+      action_worker.perform(action_with_snapshot_name.id)
+
+      expect(compute.snapshots.count).to eq 0
+    end
+
 
     it 'calls take_snapshot_vm on compute object' do
       expect_any_instance_of(::Compute).to receive(:take_snapshot_vm) { fail 'foo' }
       compute.enqueue!
-      action_worker.perform(action.id)
-      expect(action.reload.state).to eq 'failed'
-      expect(action.reason).to eq 'foo'
+      action_worker.perform(action_with_snapshot_name.id)
+
+      action_with_snapshot_name.reload
+
+      expect(action_with_snapshot_name.state).to eq 'failed'
+      expect(action_with_snapshot_name.reason).to eq 'foo'
     end
 
     it 'stores take_snapshot_vm\'s output to snapshot object' do
       allow_any_instance_of(::Compute).to receive(:take_snapshot_vm) { sample_provider_data }
       compute.enqueue!
-      action_worker.perform(action.id)
-      snapshot.reload
-      expect(snapshot.provider_data.symbolize_keys).to eq sample_provider_data
+      action_worker.perform(action_with_snapshot_name.id)
+
+      expect(compute.snapshots.first.provider_data.symbolize_keys).to eq sample_provider_data
     end
 
     it 'stores provider_ref to snapshot object' do
       allow_any_instance_of(::Compute).to receive(:take_snapshot_vm) { sample_provider_data }
       compute.enqueue!
-      action_worker.perform(action.id)
-      snapshot.reload
-      expect(snapshot.provider_ref).to eq sample_provider_data[:ref]
+
+      action_worker.perform(action_with_snapshot_name.id)
+
+      expect(compute.snapshots.first.provider_ref).to eq sample_provider_data[:ref]
     end
   end
 
