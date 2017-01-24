@@ -6,6 +6,7 @@ require 'multi_json'
 require 'lab_manager/app/endpoints/base'
 require 'lab_manager/app/endpoints/uptime'
 require 'lab_manager/app/endpoints/computes'
+require 'lab_manager/app/endpoints/status'
 
 module LabManager
   # base rest service class
@@ -28,6 +29,10 @@ module LabManager
 
         map '/computes' do
           run LabManager::App::Endpoints::Compute.new
+        end
+
+        map '/status' do
+          run LabManager::App::Endpoints::Status.new
         end
       end
     end
